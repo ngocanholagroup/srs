@@ -1,7 +1,24 @@
 const express = require('express');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
+const { initRedis } = require('../config/redisClient');
+
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Basic security hardening
+app.disable('x-powered-by');
+app.use(helmet());
+app.use(
+  rateLimit({
+    windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+    max: Number(process.env.RATE_LIMIT_MAX || 300),
+    standardHeaders: true,
+    legacyHeaders: false,
+  })
+);
 app.use(express.json());
 
 // Day 1 bootstrap routes (warehouse-delivery module)
@@ -20,3 +37,6 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`Backend server is running on port ${port}`);
 });
+
+// Redis is optional for local/dev.
+initRedis();
