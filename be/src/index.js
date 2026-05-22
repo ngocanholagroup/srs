@@ -1,14 +1,24 @@
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
+require('../schemas/role');
+require('../schemas/user');
+require('../schemas/category');
+require('../schemas/product');
+require('../schemas/order');
+require('../schemas/warehouseMovement');
+require('../schemas/importReceipt');
+
+const { connectDatabase } = require('../config/database');
 const { initRedis } = require('../config/redisClient');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Basic security hardening
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(
@@ -19,9 +29,14 @@ app.use(
     legacyHeaders: false,
   })
 );
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  })
+);
 app.use(express.json());
 
-// Day 1 bootstrap routes (warehouse-delivery module)
+app.use('/api/auth', require('../routes/authRoute'));
 app.use('/api/warehouse', require('../routes/warehouseRoute'));
 app.use('/api/orders', require('../routes/orderRoute'));
 
@@ -34,9 +49,16 @@ app.get('/', (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Backend server is running on port ${port}`);
-});
+const start = async () => {
+  await connectDatabase();
+  initRedis();
 
-// Redis is optional for local/dev.
-initRedis();
+  app.listen(port, () => {
+    console.log(`Backend server is running on port ${port}`);
+  });
+};
+
+start().catch((err) => {
+  console.error('Failed to start server:', err.message);
+  process.exit(1);
+});

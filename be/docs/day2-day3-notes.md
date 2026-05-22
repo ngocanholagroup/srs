@@ -36,9 +36,16 @@
 - Added global rate limiting via `express-rate-limit`.
 - Added `dotenv` and disabled `x-powered-by`.
 
-## Next step (Day 4+)
+## Day 4+ implemented
 
-- Replace in-memory store with Mongo repository layer.
-- Add RBAC middleware and JWT auth integration.
-- Add automated tests for transition matrix and stock conflicts.
+- MongoDB models: `product`, `order`, `warehouseMovement` (+ `role`, `user`, `category` for auth/seed).
+- Services refactored to Mongoose; order status updates use DB transactions.
+- RBAC: `checkLogin` + `checkRole(['Admin', 'Manager', 'Warehouse'])` on warehouse/order routes.
+- Auth: `POST /api/auth/login` for JWT (test account: `warehouse@holagroup.com` / `Warehouse123`).
+- Seed: `npm run seed:warehouse`
+- Tests: `npm test` (order transition matrix).
+
+## Env
+
+Copy `be/.env.example` to `be/.env` and set `DB_URI`, `JWT_SECRET`.
 
